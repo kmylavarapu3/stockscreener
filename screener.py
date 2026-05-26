@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -95,7 +94,8 @@ def _load_fundamentals_cache() -> pd.DataFrame:
     if not FUNDAMENTALS_CACHE.exists():
         return pd.DataFrame(columns=["ticker", "pe", "fetched_at"])
     df = pd.read_csv(FUNDAMENTALS_CACHE)
-    df["fetched_at"] = pd.to_datetime(df["fetched_at"], errors="coerce")
+    # Force UTC-aware so comparisons with `cutoff` (also UTC-aware) succeed.
+    df["fetched_at"] = pd.to_datetime(df["fetched_at"], errors="coerce", utc=True)
     return df
 
 
@@ -119,7 +119,7 @@ def fetch_fundamentals(
       tickers that did succeed so subsequent runs make progress.
     """
     cache = _load_fundamentals_cache().set_index("ticker")
-    cutoff = datetime.utcnow() - timedelta(hours=FUNDAMENTALS_TTL_HOURS)
+    cutoff = pd.Timestamp.utcnow() - pd.Timedelta(hours=FUNDAMENTALS_TTL_HOURS)
 
     stale: list[str] = []
     for t in tickers:
@@ -145,7 +145,7 @@ def fetch_fundamentals(
                     rate_limited = True
                     continue
                 cache.loc[t, "pe"] = pe
-                cache.loc[t, "fetched_at"] = pd.Timestamp.utcnow().to_pydatetime()
+                cache.loc[t, "fetched_at"] = pd.Timestamp.utcnow()
 
     cache = cache.reset_index()
     _save_fundamentals_cache(cache)
