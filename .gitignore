@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+build/
+dist/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Streamlit secrets (never commit)
+.streamlit/secrets.toml
+
+# Runtime cache (regenerates itself; keep out of git so the repo stays clean)
+data/fundamentals_cache.csv
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+*.swp
